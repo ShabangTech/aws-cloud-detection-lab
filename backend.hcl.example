@@ -1,0 +1,4 @@
+# Copy to backend.hcl and use the same state bucket as the landing zone.
+# backend.hcl is git-ignored.
+bucket = "hlz-tfstate-123456789012-us-east-2-an"
+region = "us-east-2"

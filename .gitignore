@@ -1,0 +1,10 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+backend.hcl
+terraform.tfvars
+.terraform.lock.hcl
+build/
+__pycache__/
+.pytest_cache/
