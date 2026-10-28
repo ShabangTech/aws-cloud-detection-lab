@@ -62,6 +62,13 @@ terraform apply "lab.tfplan"
 Then **confirm the SNS subscription**: AWS emails `alert_email` a confirmation
 link, and no alerts arrive until you click it.
 
+## Results
+
+First live run: a world-open SSH rule was **closed automatically in 7 to 9
+seconds**, the D02 alarm emailed in about 2 minutes, and CloudTrail shows the
+full attack-and-response timeline. Screenshots, timings and lessons learned:
+[docs/RESULTS.md](docs/RESULTS.md).
+
 ## Try it
 
 Validate the detections against your own throwaway resources, during a change

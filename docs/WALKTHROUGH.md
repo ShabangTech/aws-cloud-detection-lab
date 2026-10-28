@@ -51,7 +51,7 @@ evidence:
 | ID | Self-test action | Alarm fired? | Time to alert | Hunting query used |
 |----|------------------|--------------|---------------|--------------------|
 | D01 | | | | defense-evasion |
-| D02 | | | | defense-evasion |
+| D02 | Opened SSH to 0.0.0.0/0 on a throwaway SG | Yes | 2 min 14 s | defense-evasion |
 | D03 | | | | triage-recent-activity |
 | D04 | | | | defense-evasion |
 | D05 | | | | denied-calls-by-identity |
@@ -78,10 +78,10 @@ Capture the before/after and delete the group.
 
 | Evidence | Captured? |
 |----------|-----------|
-| Inbound rule before | |
-| Inbound rule after (gone) | |
-| Auto-fix email | |
-| Lambda log line | |
+| Inbound rule before | Yes ([image](images/02-attack-ssh-open-to-world.png)) |
+| Inbound rule after (gone) | Yes, closed in 7 to 9 s ([image](images/03-rule-gone-and-lambda-log.png)) |
+| Auto-fix email | Yes ([image](images/04-auto-remediation-email.png)) |
+| Lambda log line | Yes ([image](images/03-rule-gone-and-lambda-log.png)) |
 
 ## Part 5: Tear down
 

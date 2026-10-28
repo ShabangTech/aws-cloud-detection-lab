@@ -21,13 +21,15 @@ landing zone and doubles as its Phase 3 (auto-remediation).
 
 ## Phase 4: Validate and document (2 to 3 hours)
 - [x] Deploy to the projects account and confirm the SNS subscription (33 resources)
-- [ ] Validate each regional detection with a safe self-test; record the
+- [ ] Validate each regional detection (D02 done: alarm in 2 min 14 s)
+      Validate the rest with a safe self-test; record the
       evidence table (action, alarm, time to alert, hunting query)
 - [x] Trigger the firewall fix on a throwaway security group (Lambda ran in
       4.7 s; auto-remediation email received)
-- [ ] Add the redacted before/after, email, and Lambda log screenshots
+- [x] Add the redacted before/after, email, and Lambda log screenshots
+      ([RESULTS.md](RESULTS.md))
 - [ ] Architecture diagram image for the README
-- [ ] Short lessons-learned write-up
+- [x] Short lessons-learned write-up (in RESULTS.md)
 - [ ] Add a resume bullet and link the repo
 
 ## Later ideas
