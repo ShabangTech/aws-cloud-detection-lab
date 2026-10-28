@@ -78,11 +78,12 @@ The landing zone was destroyed after it (29 resources).
 
 ## What went wrong, and what it taught me
 
-- **Test 1's alerts never arrived.** The fix itself worked (9 seconds), but
-  the test ran before the SNS email subscription was confirmed, and SNS drops
-  messages to an unconfirmed endpoint without any error. Lesson: confirm and
-  verify the alert path (`aws sns list-subscriptions-by-topic`) *before*
-  testing, because a detection nobody receives is the same as no detection.
+- **I got stood up.** Of course the first test's alerts didn't arrive. I was
+  waiting and thought I'd been stood up, but it was my error: I didn't confirm
+  the date. I was overzealous and ran the test before clicking the SNS
+  confirmation link, and SNS drops messages to an unconfirmed subscription
+  without any error. (The fix itself still worked, in 9 seconds.) Now I check
+  `aws sns list-subscriptions-by-topic` before testing.
 - **Response beats detection on speed.** The automatic fix closed the hole in
   7 to 9 seconds; the alarm took just over 2 minutes because CloudTrail
   batches delivery to CloudWatch Logs and the alarm evaluates 5-minute
