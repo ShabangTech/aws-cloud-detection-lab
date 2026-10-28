@@ -95,7 +95,8 @@ hunting.tf       5 saved Logs Insights queries
 remediation.tf   EventBridge rule, Lambda, least-privilege role
 lambda/          sg_remediator.py
 tests/           pytest unit tests (no AWS account needed)
-docs/            DETECTIONS.md, REMEDIATION.md, WALKTHROUGH.md, ROADMAP.md
+docs/            DETECTIONS.md, REMEDIATION.md, WALKTHROUGH.md, RESULTS.md,
+                 ROADMAP.md, GLOSSARY.md (every acronym explained)
 ```
 
 ## Safety
