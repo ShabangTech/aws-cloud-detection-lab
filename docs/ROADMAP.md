@@ -30,7 +30,7 @@ landing zone and doubles as its Phase 3 (auto-remediation).
       ([RESULTS.md](RESULTS.md))
 - [ ] Architecture diagram image for the README
 - [x] Short lessons-learned write-up (in RESULTS.md)
-- [ ] Add a resume bullet and link the repo
+- [x] Add a resume bullet and link the repo
 
 ## Later ideas
 - [ ] Standard account: set multi_region = true and confirm D08/D09 fire
