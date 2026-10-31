@@ -169,8 +169,9 @@ events matched, even though a role was created minutes earlier.
    triage query now drops `userIdentity.type = "AWSService"` so human actions
    come first, and the credentials hunt now also covers `CreateRole` and
    `CreatePolicy` for when the trail is multi-Region.
-4. **Attribution across identities.** `activity-by-source-ip` ties the test
-   role and the analyst role to the same source IP address, which is how an
+4. **Attribution across identities.** `activity-by-source-ip` shows the test
+   role (`cdl-d05-recon-test/d05-recon`) and the analyst role calling from the
+   same source IP address (blacked out in the screenshot), which is how an
    investigator links a throwaway identity back to the person behind it.
 5. **S3 bucket creation is allowed on this account.** A first D05 idea
    (creating buckets with global names) wasn't denied at all: seven empty
