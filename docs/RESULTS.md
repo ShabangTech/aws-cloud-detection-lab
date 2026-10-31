@@ -112,7 +112,11 @@ command was typed.
 
 ![D01 alarm email](images/08-d01-alarm-email.png)
 
-Logging was back on (`IsLogging: true`) within minutes. Both alarms show as
+Logging was back on (`IsLogging: true`) within minutes:
+
+![D01 alarm state, logging restarted](images/16-d01-logging-restored.png)
+
+The alarm then returned to OK on its own. Both alarms show as
 single spikes on the CloudWatch overview, and every alarm returned to OK on
 its own once the 5-minute window passed:
 
@@ -123,9 +127,27 @@ its own once the 5-minute window passed:
 A temporary role, `cdl-d05-recon-test`, was created with a trust policy for
 the account only and **no permissions**. It was assumed, used for six EC2
 lookups in Ohio (each returned `UnauthorizedOperation`), and deleted straight
-after.
+after. The terminal output from the clean run (account number redacted):
+
+```text
+Now acting as: arn:aws:sts::<account>:assumed-role/cdl-d05-recon-test/d05-recon
+BURST START: 10/30/2026 7:10:16 PM
+aws: [ERROR]: An error occurred (UnauthorizedOperation) when calling the
+DescribeInstances operation: You are not authorized to perform this operation.
+User: arn:aws:sts::<account>:assumed-role/cdl-d05-recon-test/d05-recon is not
+authorized to perform: ec2:DescribeInstances because no identity-based policy
+allows the ec2:DescribeInstances action
+  (x6)
+Back as: arn:aws:sts::<account>:assumed-role/AccountFullAccessRole/<session>
+```
 
 ![D05 alarm email](images/10-d05-alarm-email.png)
+
+A first, less tidy run of the same test about 15 minutes earlier had already
+fired the alarm (6 denials, alarm at 23:02:35 UTC); the alarm reset to OK
+before it was checked, which is why the test was repeated cleanly.
+
+![D05 first run alarm email](images/18-d05-first-try-email.png)
 
 ### Hunting: what the saved queries showed
 
@@ -156,7 +178,10 @@ events matched, even though a role was created minutes earlier.
    attempt used six `iam:CreateOpenIDConnectProvider` calls; all six were
    denied by the account's SCP, but IAM records its events in us-east-1 and
    the trail lives in us-east-2, so neither the alarm nor any query saw them.
-   The re-run used a regional service (EC2) and fired. The test role's own
+   The re-run used a regional service (EC2) and fired.
+
+   ![Six IAM calls denied by the SCP, never seen by the trail](images/17-d05-iam-calls-denied-by-scp.png)
+ The test role's own
    `CreateRole` is missing from the logs for the same reason. Fix on a
    standard account: `multi_region_trail = true`.
 2. **The detection ignored noise correctly.** `denied-calls-by-identity`
@@ -177,3 +202,14 @@ events matched, even though a role was created minutes earlier.
    (creating buckets with global names) wasn't denied at all: seven empty
    test buckets were created and deleted at once. A self-test has to be
    checked with one call before it's run as a burst.
+
+### Tear down
+
+The lab (33 resources) and the landing zone (29 resources) were destroyed
+afterwards. A final check found 0 alarms and 0 trails; the only bucket left is
+the Terraform state bucket, which is kept on purpose so the next deploy picks
+up where this one left off.
+
+![Lab destroy](images/19-lab-destroy.png)
+
+![Cleanup verified: 0 alarms, 0 trails, state bucket only](images/20-cleanup-verified.png)
