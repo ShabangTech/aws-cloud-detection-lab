@@ -224,6 +224,78 @@ filter userIdentity.type != "AWSService"
 
 ---
 
+## Coming from Splunk: SPL to Logs Insights
+
+Same thinking, different words. In Splunk the CloudTrail data would sit in
+an index (say `index=aws sourcetype=aws:cloudtrail`); here the log group
+`/hlz/cloudtrail` plays that part.
+
+| Splunk SPL | Logs Insights | Notes |
+|------------|---------------|-------|
+| `index=aws sourcetype=aws:cloudtrail` | Log group `/hlz/cloudtrail` (the `SOURCE` line) | Picked in the query scope |
+| `_time` | `@timestamp` | |
+| `eventName=StopLogging` | `filter eventName = "StopLogging"` | Insights needs `filter` and quotes |
+| `eventName=Get*` | `filter eventName like /^Get/` | Wildcards become regex |
+| `NOT eventName=Get*` | `filter eventName not like /^Get/` | |
+| `eventName IN (A, B)` | `filter eventName in ["A", "B"]` | Square brackets |
+| `isnotnull(errorCode)` | `ispresent(errorCode)` | |
+| `table _time, eventName` | `fields @timestamp, eventName` | |
+| `rename x AS y` | `fields x as y` | |
+| `sort -_time` | `sort @timestamp desc` | |
+| `head 20` | `limit 20` | |
+| `stats count by eventName` | `stats count(*) by eventName` | Needs `(*)` |
+| `stats dc(eventSource)` | `stats count_distinct(eventSource)` | |
+| `stats earliest(_time) latest(_time)` | `stats earliest(@timestamp), latest(@timestamp)` | |
+| `timechart span=5m count` | `stats count(*) by bin(5m)` | Then click **Visualization** |
+| `bin _time span=5m` | `bin(5m)` inside `stats ... by` | |
+| `... \| where count>=5` | `... \| filter denied >= 5` | `filter` works after `stats` too |
+| `eval pct=errors*100/total` | `fields errors * 100 / total as pct` | |
+| `rex field=arn "assumed-role/(?<role>[^/]+)"` | `parse userIdentity.arn "assumed-role/*/*" as role, session` | `*` captures in order; regex also works |
+| `dedup sourceIPAddress` | `dedup sourceIPAddress` | Same |
+| `top limit=10 eventName` | `stats count(*) as c by eventName \| sort c desc \| limit 10` | No `top` |
+| `rare eventName` | `stats count(*) as c by eventName \| sort c asc \| limit 10` | No `rare` |
+| `spath` | Not needed | JSON fields are found automatically |
+| Subsearch, `join`, `transaction` | Not available | Run two queries, or use a lookup table |
+
+### Side by side: the D05 burst hunt
+
+Splunk:
+```
+index=aws sourcetype=aws:cloudtrail (errorCode=AccessDenied* OR errorCode=*UnauthorizedOperation)
+| bin _time span=5m
+| stats count AS denied BY userIdentity.arn, _time
+| where denied >= 5
+| sort -denied
+```
+
+Logs Insights:
+```
+filter errorCode like /AccessDenied|UnauthorizedOperation/
+| stats count(*) as denied by userIdentity.arn, bin(5m) as window
+| filter denied >= 5
+| sort denied desc
+```
+
+### Side by side: activity per role
+
+Splunk:
+```
+index=aws sourcetype=aws:cloudtrail userIdentity.type=AssumedRole
+| rex field=userIdentity.arn "assumed-role/(?<role>[^/]+)/(?<session>.+)"
+| stats count AS calls dc(session) AS sessions BY role
+| sort -calls
+```
+
+Logs Insights:
+```
+filter userIdentity.type = "AssumedRole"
+| parse userIdentity.arn "assumed-role/*/*" as role, session
+| stats count(*) as calls, count_distinct(session) as sessions by role
+| sort calls desc
+```
+
+---
+
 ## A typical hunt, start to finish
 
 1. **An alert fires** (say D05). Run **I3** to see who crossed the line.
