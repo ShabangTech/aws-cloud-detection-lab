@@ -145,6 +145,11 @@ after.
 
 ![Hunt: triage, before tuning](images/14-hunt-triage.png)
 
+The empty credentials hunt is the evidence for finding 1: 0 of about 1,360
+events matched, even though a role was created minutes earlier.
+
+![Hunt: new credentials, no results](images/15-hunt-new-credentials-empty.png)
+
 ### Findings
 
 1. **A single-Region trail is blind to global IAM events.** The first D05
