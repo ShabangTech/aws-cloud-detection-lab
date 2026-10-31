@@ -6,8 +6,11 @@ locals {
   hunting_queries = {
     "triage-recent-activity" = <<-EOQ
       # Who did what in the last hour? Start every investigation here.
+      # AWS services (S3, CloudWatch Logs) calling KMS for log encryption are
+      # dropped so human actions come first.
       fields @timestamp, eventName, eventSource, userIdentity.arn, sourceIPAddress, errorCode
       | filter eventName not like /^(Get|List|Describe|Lookup)/
+      | filter userIdentity.type != "AWSService"
       | sort @timestamp desc
       | limit 100
     EOQ
@@ -21,9 +24,10 @@ locals {
     EOQ
 
     "new-credentials-and-users" = <<-EOQ
-      # Persistence: new users, passwords, access keys and admin grants.
+      # Persistence: new users, roles, passwords, access keys and admin grants.
+      # IAM events are global: this only returns rows with a multi-Region trail.
       fields @timestamp, eventName, userIdentity.arn, requestParameters.userName, requestParameters.policyArn
-      | filter eventName in ["CreateUser", "CreateLoginProfile", "CreateAccessKey", "AttachUserPolicy", "AttachRolePolicy", "PutUserPolicy"]
+      | filter eventName in ["CreateUser", "CreateRole", "CreateLoginProfile", "CreateAccessKey", "CreatePolicy", "AttachUserPolicy", "AttachRolePolicy", "PutUserPolicy", "PutRolePolicy"]
       | sort @timestamp desc
     EOQ
 

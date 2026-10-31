@@ -90,3 +90,84 @@ The landing zone was destroyed after it (29 resources).
   periods. Detection still matters: it creates the record a human reviews.
 - **Attribution works.** CloudTrail separates the person who opened the rule
   from the function that closed it, which is what an investigator needs.
+
+## Second live run: detections and hunting
+
+October 30, 2026, same account and region. The landing zone was redeployed
+with `cloudtrail_to_cloudwatch=true` and the lab applied on top (9 metric
+filters, 9 alarms, SNS subscription confirmed before testing).
+
+### Headline numbers
+
+| Detection | Self-test | Alarm | Time to alert |
+|-----------|-----------|-------|---------------|
+| D01 logging tampering | `StopLogging` on the lab's own trail, then `StartLogging` at once | OK → ALARM | **43 s** (22:09:43 → 22:10:26 UTC) |
+| D05 denied-call burst | 6 `ec2:DescribeInstances` calls from a role with no permissions | OK → ALARM (6 vs threshold 5) | **2 min 19 s** (19:10:16 → 19:12:35 ET) |
+
+The D01 time comes from the `StopLogging` event's own timestamp in CloudTrail,
+not from the shell clock, which was read a couple of minutes before the
+command was typed.
+
+### D01: someone turns off the audit trail
+
+![D01 alarm email](images/08-d01-alarm-email.png)
+
+Logging was back on (`IsLogging: true`) within minutes. Both alarms show as
+single spikes on the CloudWatch overview, and every alarm returned to OK on
+its own once the 5-minute window passed:
+
+![Alarm overview: D05 and D01 spikes](images/09-alarm-dashboard.png)
+
+### D05: a low-privilege identity probing the account
+
+A temporary role, `cdl-d05-recon-test`, was created with a trust policy for
+the account only and **no permissions**. It was assumed, used for six EC2
+lookups in Ohio (each returned `UnauthorizedOperation`), and deleted straight
+after.
+
+![D05 alarm email](images/10-d05-alarm-email.png)
+
+### Hunting: what the saved queries showed
+
+| Query | Result |
+|-------|--------|
+| `defense-evasion` | Found the single `StopLogging` call among about 920 events, with who and from where |
+| `denied-calls-by-identity` | Put `cdl-d05-recon-test/d05-recon` near the top: 12 `UnauthorizedOperation` on `DescribeInstances` (both runs) |
+| `triage-recent-activity` | 514 matches, topped by AWS services calling KMS for log encryption (noise; tuned below) |
+| `new-credentials-and-users` | Nothing: IAM events don't reach this trail (finding 1) |
+| `activity-by-source-ip` | 14 sources: one human IP address, plus AWS service principals |
+
+![Hunt: defense evasion](images/11-hunt-defense-evasion.png)
+
+![Hunt: denied calls by identity](images/12-hunt-denied-calls.png)
+
+![Hunt: activity by source IP](images/13-hunt-activity-by-ip.png)
+
+![Hunt: triage, before tuning](images/14-hunt-triage.png)
+
+### Findings
+
+1. **A single-Region trail is blind to global IAM events.** The first D05
+   attempt used six `iam:CreateOpenIDConnectProvider` calls; all six were
+   denied by the account's SCP, but IAM records its events in us-east-1 and
+   the trail lives in us-east-2, so neither the alarm nor any query saw them.
+   The re-run used a regional service (EC2) and fired. The test role's own
+   `CreateRole` is missing from the logs for the same reason. Fix on a
+   standard account: `multi_region_trail = true`.
+2. **The detection ignored noise correctly.** `denied-calls-by-identity`
+   also listed 30+ `DryRunOperationException` errors from AWS services checking
+   KMS permissions, plus a few malformed console queries. None of them match
+   D05's pattern (`AccessDenied*` or `*UnauthorizedOperation`), so none of
+   them raised an alert.
+3. **Triage needed tuning.** Most "write" events in the last hours were AWS
+   services (S3, CloudWatch Logs) using KMS on the encrypted log bucket. The
+   triage query now drops `userIdentity.type = "AWSService"` so human actions
+   come first, and the credentials hunt now also covers `CreateRole` and
+   `CreatePolicy` for when the trail is multi-Region.
+4. **Attribution across identities.** `activity-by-source-ip` ties the test
+   role and the analyst role to the same source IP address, which is how an
+   investigator links a throwaway identity back to the person behind it.
+5. **S3 bucket creation is allowed on this account.** A first D05 idea
+   (creating buckets with global names) wasn't denied at all: seven empty
+   test buckets were created and deleted at once. A self-test has to be
+   checked with one call before it's run as a burst.

@@ -50,15 +50,18 @@ evidence:
 
 | ID | Self-test action | Alarm fired? | Time to alert | Hunting query used |
 |----|------------------|--------------|---------------|--------------------|
-| D01 | | | | defense-evasion |
+| D01 | Stopped logging on the lab's own trail, restarted it at once | Yes | 43 s | defense-evasion |
 | D02 | Opened SSH to 0.0.0.0/0 on a throwaway SG | Yes | 2 min 14 s | defense-evasion |
 | D03 | | | | triage-recent-activity |
 | D04 | | | | defense-evasion |
-| D05 | | | | denied-calls-by-identity |
+| D05 | Assumed a no-permission test role and made 6 EC2 calls it can't make | Yes (6 vs 5) | 2 min 19 s | denied-calls-by-identity |
 | D06 | | | | triage-recent-activity |
 | D07 | | | | triage-recent-activity |
 | D08 | n/a on this account | no (global) | — | new-credentials-and-users |
 | D09 | n/a on this account | no (global) | — | new-credentials-and-users |
+
+D01 and D05 were run on October 30, 2026; see
+[RESULTS.md](RESULTS.md#second-live-run-detections-and-hunting).
 
 D08 and D09 are expected to stay quiet here. Note *why* in your write-up (the
 single-Region IAM gap) — explaining a non-fire correctly reads as more

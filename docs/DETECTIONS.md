@@ -80,8 +80,10 @@ S3 Block Public Access stays on throughout). For example:
 - **D04** — create a brand-new KMS key with no data under it, schedule it for
   deletion with the longest window (so you can cancel), confirm the alert, then
   cancel the deletion.
-- **D05** — call a few APIs your role is not allowed to use and watch the
-  denied-call burst alarm.
+- **D05** — create a temporary role with no permissions, assume it, and make
+  6 regional calls (for example `ec2 describe-instances`) within a minute;
+  then delete the role. Use a **regional** service: denied IAM calls are global
+  events and never reach a single-Region trail outside us-east-1.
 
 For each test, record: what you did, which alarm fired, how long it took, and
 the Logs Insights query that showed the activity. That evidence table (see

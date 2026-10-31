@@ -66,7 +66,10 @@ link, and no alerts arrive until you click it.
 
 First live run: a world-open SSH rule was **closed automatically in 7 to 9
 seconds**, the D02 alarm emailed in about 2 minutes, and CloudTrail shows the
-full attack-and-response timeline. Screenshots, timings and lessons learned:
+full attack-and-response timeline. A second run validated logging tampering
+(**alert in 43 seconds**) and a denied-call burst (**2 min 19 s**), and all five
+hunting queries were run against the evidence. Screenshots, timings and
+lessons learned:
 [docs/RESULTS.md](docs/RESULTS.md).
 
 ## Try it
