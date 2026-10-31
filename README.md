@@ -17,7 +17,8 @@ free-plan "projects" account and stays inside the CloudWatch free tier.
   new SSH keys, secret reads, and (on a multi-Region trail) IAM persistence and
   privilege escalation. See [docs/DETECTIONS.md](docs/DETECTIONS.md).
 - **Email alerts** through one SNS topic every alarm publishes to.
-- **5 saved Logs Insights queries** for triage and threat hunting.
+- **5 saved Logs Insights queries** for triage and threat hunting, plus a
+  [hunting cheat sheet](docs/HUNTING-QUERIES.md) of 20 basic-to-intermediate queries.
 - **Auto-remediation:** an EventBridge rule and Lambda that close SSH/RDP rules
   opened to the internet, then report what they removed. See
   [docs/REMEDIATION.md](docs/REMEDIATION.md).
