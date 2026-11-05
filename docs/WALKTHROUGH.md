@@ -52,16 +52,18 @@ evidence:
 |----|------------------|--------------|---------------|--------------------|
 | D01 | Stopped logging on the lab's own trail, restarted it at once | Yes | 43 s | defense-evasion |
 | D02 | Opened SSH to 0.0.0.0/0 on a throwaway SG | Yes | 2 min 14 s | defense-evasion |
-| D03 | | | | triage-recent-activity |
-| D04 | | | | defense-evasion |
+| D03 | Tightened the public-access block on a throwaway bucket, then deleted it | Yes | 2 min 27 s | triage-recent-activity |
+| D04 | Scheduled deletion of a brand-new test KMS key (7 days) | Yes | 1 min 43 s | defense-evasion |
 | D05 | Assumed a no-permission test role and made 6 EC2 calls it can't make | Yes (6 vs 5) | 2 min 19 s | denied-calls-by-identity |
-| D06 | | | | triage-recent-activity |
-| D07 | | | | triage-recent-activity |
+| D06 | Created an EC2 key pair, then deleted it and listed to confirm | Yes | 3 min 3 s | triage-recent-activity |
+| D07 | Read a fake SSM SecureString with decryption, then deleted it | Yes | 1 min 51 s | triage-recent-activity |
 | D08 | n/a on this account | no (global) | — | new-credentials-and-users |
 | D09 | n/a on this account | no (global) | — | new-credentials-and-users |
 
 D01 and D05 were run on October 30, 2026; see
-[RESULTS.md](RESULTS.md#second-live-run-detections-and-hunting).
+[RESULTS.md](RESULTS.md#second-live-run-detections-and-hunting). D03, D04, D06
+and D07 were run on November 4, 2026; see
+[RESULTS.md](RESULTS.md#third-live-run-the-remaining-regional-detections).
 
 D08 and D09 are expected to stay quiet here. Note *why* in your write-up (the
 single-Region IAM gap) — explaining a non-fire correctly reads as more

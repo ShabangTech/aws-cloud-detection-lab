@@ -69,8 +69,10 @@ First live run: a world-open SSH rule was **closed automatically in 7 to 9
 seconds**, the D02 alarm emailed in about 2 minutes, and CloudTrail shows the
 full attack-and-response timeline. A second run validated logging tampering
 (**alert in 43 seconds**) and a denied-call burst (**2 min 19 s**), and all five
-hunting queries were run against the evidence. Screenshots, timings and
-lessons learned:
+hunting queries were run against the evidence. A third run covered S3
+exposure, KMS key destruction, SSH key creation and secret reads, so **all
+seven regional detections have fired against a real self-test, each in under
+about 3 minutes**. Screenshots, timings and lessons learned:
 [docs/RESULTS.md](docs/RESULTS.md).
 
 ## Try it

@@ -213,3 +213,63 @@ up where this one left off.
 ![Lab destroy](images/19-lab-destroy.png)
 
 ![Cleanup verified: 0 alarms, 0 trails, state bucket only](images/20-cleanup-verified.png)
+
+## Third live run: the remaining regional detections
+
+November 4, 2026, same account and region. Both stacks were redeployed from
+scratch (`cloudtrail_to_cloudwatch=true`, 9 alarms) and each test used a
+throwaway resource that was removed straight after. Nothing was ever made
+public, and the landing zone's own KMS key was never touched.
+
+### Headline numbers
+
+| Detection | Self-test | Attack (CloudTrail) | Alarm email | Time to alert |
+|-----------|-----------|---------------------|-------------|---------------|
+| D03 S3 exposure controls | `PutBucketPublicAccessBlock` on a new test bucket (tightening it), then delete the bucket | 18:49:00 | 18:51:27 | **2 min 27 s** |
+| D04 KMS key destruction | `ScheduleKeyDeletion` on a brand-new test key, 7-day window | 18:58:07 | 18:59:50 | **1 min 43 s** |
+| D06 SSH key added | `CreateKeyPair` (private key never printed), then delete it | 18:43:14 | 18:46:17 | **3 min 3 s** |
+| D07 secrets read | SSM `GetParameter --with-decryption` on a fake SecureString, then delete it | 18:46:47 | 18:48:38 | **1 min 51 s** |
+
+All times are New York (UTC-5). Attack times come from CloudTrail event
+history (`lookup-events`); alarm times come from the alarm emails.
+
+With D01, D02 and D05 from earlier runs, **all seven regional detections have
+now fired against a real self-test**, every one in under about 3 minutes.
+D08 and D09 stay documented as not testable here (global IAM events; see
+finding 1 of the second run).
+
+### The alarm emails
+
+![D03 alarm email](images/21-d03-alarm-email.png)
+
+![D04 alarm email](images/22-d04-alarm-email.png)
+
+![D06 alarm email](images/23-d06-alarm-email.png)
+
+![D07 alarm email](images/24-d07-alarm-email.png)
+
+### Findings
+
+1. **An unconfirmed subscription makes every alarm silent.** The first D06 and
+   D07 run (6:14 to 6:21 PM) fired both alarms, but no email arrived: the
+   redeploy had created a new SNS subscription that was still
+   `PendingConfirmation`. Alerts sent before confirmation are not resent. The
+   alarm history still proved the detections worked, and a re-run after
+   confirming produced the emails above. Checking
+   `aws sns list-subscriptions` is now part of verifying a deploy.
+2. **A "successful" delete is not proof of cleanup.** On the first run the key
+   pair was created as `cdl-do6-test` (letter o) and deleted as `cdl-d06-test`
+   (zero). EC2's `delete-key-pair` returned `"Return": true` anyway, because
+   it doesn't fail on a name that doesn't exist. The leftover was found by
+   listing with `describe-key-pairs` and deleted by its real name. Every
+   cleanup now ends with a list call, not a delete call.
+3. **D03 fires on tightening as well as loosening.** The test made the bucket
+   *more* private and still raised a HIGH alert. That is by design: a change to
+   exposure controls is worth a human look either way, and it let the test
+   run without exposing anything. In a busy account the tuning step would be
+   to exclude the role that legitimately manages bucket settings.
+4. **D04 was tested on a dedicated key, never a real one.** The test key was
+   held in a variable, so the deletion could only target it, and it was left
+   in `PendingDeletion` for the 7-day minimum (it can still be cancelled in
+   that window). Scheduling deletion of the landing zone's key would make its
+   encrypted logs unreadable: exactly the destruction D04 exists to catch.

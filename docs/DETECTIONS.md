@@ -77,13 +77,27 @@ S3 Block Public Access stays on throughout). For example:
 
 - **D01** — stop your own trail's logging, confirm the alert, then turn logging
   back on immediately and verify `IsLogging` is `true` again.
-- **D04** — create a brand-new KMS key with no data under it, schedule it for
-  deletion with the longest window (so you can cancel), confirm the alert, then
-  cancel the deletion.
+- **D03** — create a throwaway bucket, *tighten* its public-access block
+  (`put-public-access-block` with all four settings `true`), confirm the
+  alert, then delete the bucket. The alarm fires on any change, so the test
+  never has to make anything public.
+- **D04** — create a brand-new KMS key with no data under it and keep its ID in
+  a variable, so the next step can't touch any other key. Schedule it for
+  deletion (7 days is the minimum, and you can cancel within that window) and
+  confirm the alert. Never use the landing zone's key.
 - **D05** — create a temporary role with no permissions, assume it, and make
   6 regional calls (for example `ec2 describe-instances`) within a minute;
   then delete the role. Use a **regional** service: denied IAM calls are global
   events and never reach a single-Region trail outside us-east-1.
+- **D06** — `create-key-pair` with `--query KeyFingerprint` (so the private key
+  is never printed), then delete it. Finish with `describe-key-pairs`:
+  `delete-key-pair` reports success even for a name that doesn't exist.
+- **D07** — store a fake value as an SSM `SecureString`, read it back with
+  `--with-decryption`, then delete it. (SSM standard parameters are free;
+  Secrets Manager charges per secret.)
+
+Before any test, confirm the SNS subscription isn't `PendingConfirmation`
+(`aws sns list-subscriptions`), or the alarm will fire with no email.
 
 For each test, record: what you did, which alarm fired, how long it took, and
 the Logs Insights query that showed the activity. That evidence table (see
