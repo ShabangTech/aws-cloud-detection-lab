@@ -248,6 +248,19 @@ finding 1 of the second run).
 
 ![D07 alarm email](images/24-d07-alarm-email.png)
 
+### After the tests
+
+Each test shows as a single spike on an otherwise flat line, with no
+background noise or false alarms:
+
+![D04 and D03: one spike each](images/25-alarm-spikes-d03-d04.png)
+
+Within minutes all nine alarms were back to OK on their own (each resets once
+its 5-minute window passes with no new events), and every one still had its
+email action enabled:
+
+![All nine alarms back to OK](images/26-all-alarms-back-to-ok.png)
+
 ### Findings
 
 1. **An unconfirmed subscription makes every alarm silent.** The first D06 and
